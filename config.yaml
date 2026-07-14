@@ -1,0 +1,73 @@
+# Konfiguration des wöchentlichen Abschlusslink-Checkers
+base_url: "https://www.test-zahnzusatzversicherung.de"
+user_agent: "OVV-LinkChecker/1.0 (+https://www.test-zahnzusatzversicherung.de)"
+
+# Test-Profile für den Wizard-Crawl. Alle Gesundheitsfragen werden mit Nein
+# beantwortet, damit die maximale Tarifanzahl erscheint.
+profiles:
+  - name: "Kind 8 Jahre"
+    birthyear: 2018
+  - name: "Erwachsener 25 Jahre"
+    birthyear: 2001
+  - name: "Senior 60 Jahre"
+    birthyear: 1966
+
+# Buttons mit diesen Textmustern werden NIEMALS geklickt (Regex, case-insensitive).
+# Das Erreichen eines solchen Buttons gilt als erfolgreiches Streckenende.
+stop_patterns:
+  # "Jetzt (sicher) abschließen", aber NICHT "Jetzt ONLINE abschließen"
+  # (das ist z.B. bei ERGO ein Zwischenschritt, siehe anleitungen.md).
+  - "jetzt\\s+(sicher\\s+)?abschlie(ß|ss)en"
+  - "^abschlie(ß|ss)en$"
+  - "kostenpflichtig"
+  - "zahlungspflichtig"
+  - "verbindlich"
+  - "antrag\\s+(ab)?senden"
+  - "antrag\\s+abschicken"
+  - "angebot\\s+(anfordern|senden)"  # erzeugt einen Lead, nie klicken
+  - "^(jetzt\\s+)?beantragen$"
+  - "jetzt\\s+kaufen"
+
+# Buttons mit diesen Textmustern gelten als "Weiter"-Kandidaten (Regex).
+# Wichtig: Wortgrenzen verwenden ("weiter" darf nicht "Weitere Personen" treffen).
+next_patterns:
+  - "\\bweiter\\b"                # "Weiter", "Bestätigen und weiter", "weiter zu ..."
+  - "\\bfortfahren\\b"
+  - "n(ä|ae)chster?\\s+schritt"
+  - "zum\\s+antrag"
+  - "\\bberechnen\\b"
+  - "angebote?\\s+(an)?zeigen"   # z.B. Berlin-Direkt "Angebote zeigen"
+  - "tarife?\\s+anzeigen"        # z.B. levelnine (SDK, UKV/ZahnPrivat)
+  - "^(ü|ue)bernehmen$"          # Antwort-Übernehmen-Schalter (z.B. Württembergische)
+  # Zwischenschritte laut anleitungen.md:
+  - "jetzt\\s+online\\s+abschlie(ß|ss)en"  # ERGO: führt zur Personenauswahl
+  - "jetzt\\s+tarif\\s+beantragen"         # Allianz: wählt nur den Tarif
+  - "berechnung\\s+starten"                # levelnine
+  - "beantragung\\s+starten"               # levelnine
+  - "antrag\\s*stellen"                    # Concordia
+  - "(alle\\s+)?(dokumente|unterlagen)\\s+herunterladen"  # levelnine, Signal (Pflicht-Download)
+  - "^zustimmen"                           # Beratungsverzicht u.ä.
+  - "zu\\s+den\\s+\\S*ausk(ü|ue)nften"     # Bayerische "zu den Zahnauskünften"
+  - "zu\\s+den\\s+pers(ö|oe)nlichen\\s+angaben"
+  - "\\b(aus)?w(ä|ae)hlen\\b"    # Tarifkarten-Buttons ("Tarif wählen", "Auswählen")
+  - "(daten|angaben)\\s+(über)?pr(ü|ue)fen"
+  - "(daten|angaben)\\s+best(ä|ae)tigen"
+
+funnel:
+  max_steps: 25
+  page_timeout_ms: 30000
+  # Externe Domains, die als Versicherer-Strecken durchgeklickt werden dürfen.
+  # Alles andere Externe wird nur auf Erreichbarkeit geprüft.
+  allow_external_click_through: true
+
+downloads:
+  min_pdf_bytes: 10240
+
+report:
+  dir: "reports"
+  email_to: "info@test-zahnzusatzversicherung.de"
+  # Absender-Konto in Apple Mail (muss dort eingerichtet sein)
+  email_from: "konrad.diessl@gmail.com"
+  email_subject_ok: "[Linkcheck] OK – {ok}/{total} Strecken in Ordnung"
+  email_subject_fail: "[Linkcheck] FEHLER – {fail} Problem(e) gefunden"
+  send_email: true

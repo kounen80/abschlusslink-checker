@@ -1,0 +1,43 @@
+# Dummy-Daten für das Ausfüllen der Antragsstrecken.
+# Alle Werte sind eindeutig als Test markiert. Es wird NIE ein Antrag abgesendet.
+# Zuordnung: Feld-Heuristik (name/id/label, case-insensitive Teilstring-Suche).
+fields:
+  vorname: "TEST"
+  nachname: "Testlauf-OVV"
+  name: "TEST Testlauf-OVV"
+  firma: "Online VersicherungsVergleich GmbH TESTLAUF"
+  # Echte Firmenanschrift der Online VersicherungsVergleich GmbH, damit
+  # Adress-Validierungen (z.B. DKV) nicht fehlschlagen.
+  strasse: "Rosenheimer Landstraße"
+  hausnummer: "35"
+  plz: "85521"
+  ort: "Ottobrunn"
+  email: "test+linkchecker@test-zahnzusatzversicherung.de"
+  telefon: "08940287399"
+  vorwahl: "089"
+  rufnummer: "40287399"
+  mobil: "15123456789"   # fiktiv, ohne führende Null (Felder mit +49-Präfix)
+  geburtsdatum: "15.06.1990"   # wird pro Profil überschrieben
+  geburtsort: "München"
+  staatsangehoerigkeit: "deutsch"
+  beruf: "Angestellter"
+  # Offizielle Test-IBAN der Deutschen Bundesbank. Wird nur gefüllt,
+  # wenn das Feld ein Pflichtfeld ist, sonst leer gelassen.
+  iban: "DE02120300000000202051"
+  bic: "BYLADEM1001"
+  kontoinhaber: "TEST Testlauf-OVV"
+  krankenkasse: "AOK Bayern"
+  anzahl: "0"
+
+# Geburtsdatum je Profilname (muss zu config.yaml passen)
+birthdates:
+  "Kind 8 Jahre": "15.06.2018"
+  "Erwachsener 25 Jahre": "15.06.2001"
+  "Senior 60 Jahre": "15.06.1966"
+
+# Vorgaben für Auswahlfelder: erster passender Wert gewinnt.
+select_preferences:
+  anrede: ["Herr", "Frau"]
+  geschlecht: ["männlich", "Herr"]
+  zahlweise: ["monatlich"]
+  krankenkasse: ["AOK", "Techniker", "Barmer"]
