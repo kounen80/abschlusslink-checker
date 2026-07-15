@@ -13,8 +13,10 @@ from .report import build_report, send_via_apple_mail
 async def main() -> int:
     config = load_config()
     links = load_linkliste()
-    if len(links) != 61:
-        print(f"ABBRUCH: {len(links)} statt 61 eindeutige Links", flush=True)
+    # Plausibilitätsprüfung statt exakter Zahl: der Monats-Check darf die
+    # Liste legitim erweitern oder kürzen. Abbruch nur bei kaputter Liste.
+    if len(links) < 50 or len(links) != len({l.url for l in links}):
+        print(f"ABBRUCH: Linkliste unplausibel ({len(links)} Einträge, Duplikate möglich)", flush=True)
         return 1
     run_dir = PROJECT_DIR / config["report"]["dir"] / "daily" / datetime.now().strftime("%Y-%m-%d")
     run_dir.mkdir(parents=True, exist_ok=True)
