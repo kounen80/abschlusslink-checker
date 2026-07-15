@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+    <key>Label</key><string>de.ovv.abschlusslink-freitagscheck</string>
+    <!-- Grosser Uebersichts-Abgleich (run_monthly), aktualisiert linkliste.yaml,
+         damit der Montags-Klicktest mit frischen Links laeuft. Soll nur JEDEN
+         ZWEITEN Freitag laufen: launchd feuert jeden Freitag 10:00, der Wrapper
+         laeuft aber nur in Wochen mit gerader ISO-Kalenderwoche wirklich durch. -->
+    <key>ProgramArguments</key><array>
+        <string>/usr/bin/caffeinate</string><string>-i</string>
+        <string>/bin/zsh</string><string>-c</string>
+        <string>if (( $(date +%V) % 2 == 0 )); then exec /Users/konrad/.local/bin/uv run --project /Users/konrad/KI-Projekte/abschlusslink-checker python -m checker.run_monthly; else echo "$(date): ungerade KW $(date +%V), Freitagscheck ausgesetzt"; fi</string>
+    </array>
+    <key>WorkingDirectory</key><string>/Users/konrad/KI-Projekte/abschlusslink-checker</string>
+    <key>StartCalendarInterval</key><array>
+        <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>10</integer><key>Minute</key><integer>0</integer></dict>
+    </array>
+    <key>StandardOutPath</key><string>/Users/konrad/KI-Projekte/abschlusslink-checker/reports/launchd-freitagscheck.log</string>
+    <key>StandardErrorPath</key><string>/Users/konrad/KI-Projekte/abschlusslink-checker/reports/launchd-freitagscheck.log</string>
+    <key>EnvironmentVariables</key><dict><key>PATH</key><string>/Users/konrad/.local/bin:/usr/local/bin:/usr/bin:/bin</string></dict>
+</dict></plist>
