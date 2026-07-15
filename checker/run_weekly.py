@@ -34,8 +34,10 @@ async def main() -> int:
 
     say("1/4 Versionierte Linkliste wird geladen ...")
     links = load_linkliste()
-    if len(links) != 61:
-        say(f"ABBRUCH: Linkliste enthält {len(links)} statt 61 eindeutige Links")
+    # Plausibilitätsprüfung statt exakter Zahl: der Monats-Check darf die
+    # Liste legitim erweitern oder kürzen. Abbruch nur bei kaputter Liste.
+    if len(links) < 50 or len(links) != len({l.url for l in links}):
+        say(f"ABBRUCH: Linkliste unplausibel ({len(links)} Einträge, Duplikate möglich)")
         return 1
     say(f"   {len(links)} eindeutige Links / {sum(len(l.tarife) for l in links)} Tarifzuordnungen")
     neue, verschwundene = diff_with_last_run(links)

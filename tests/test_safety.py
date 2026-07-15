@@ -23,10 +23,12 @@ class SafetyTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(172, sum(len(e["tarife"]) for e in data))
 
     def test_checked_in_linklist_is_exact(self):
+        # Die gelebte Linkliste darf durch den Monats-Check wachsen/schrumpfen;
+        # geprüft werden Plausibilität und Eindeutigkeit, keine exakte Zahl.
         links = load_linkliste()
-        self.assertEqual(61, len(links))
-        self.assertGreaterEqual(sum(len(link.tarife) for link in links), 172)
-        self.assertEqual(61, len({link.url for link in links}))
+        self.assertGreaterEqual(len(links), 55)
+        self.assertGreaterEqual(sum(len(link.tarife) for link in links), 160)
+        self.assertEqual(len(links), len({link.url for link in links}))
 
     def test_critical_stop_patterns_are_active(self):
         patterns = compile_patterns(load_config()["stop_patterns"])
