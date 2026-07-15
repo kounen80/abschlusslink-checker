@@ -1,5 +1,14 @@
 # Klick-Anleitungen von Konrad (14.07.2026, diktiert)
 
+## Automatischer Datenfluss und Sicherheitsstatus
+
+`linkliste.yaml` wird monatlich aus der Tarifübersicht abgeglichen und ist
+die alleinige Zielbasis für Wochen- und Tageslauf. Identische absolute URLs
+werden nur einmal geprüft. `typ: tracking` erhält nur den HTTP-/Redirect-Check.
+CAPTCHA, Bot-Sperre oder ein unklarer Zustand beendet jede Interaktion sofort
+mit `MANUELL_PRÜFEN`. Die folgenden Abläufe gelten nur bis zum ersten Element,
+das auf ein `stop_pattern` passt; dieses Element wird niemals geklickt.
+
 Konrad hat die fehlgeschlagenen Antragsstrecken manuell durchgespielt.
 Diese Anleitungen sind die Referenz für die Strecken-Heuristiken.
 

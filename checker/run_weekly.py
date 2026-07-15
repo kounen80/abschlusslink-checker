@@ -1,4 +1,4 @@
-"""Wöchentlicher Gesamtlauf: entdecken, prüfen, berichten.
+"""Wöchentlicher Gesamtlauf: versionierte Linkliste prüfen und berichten.
 
 Aufruf:  uv run python -m checker.run_weekly [--ohne-mail]
 """
@@ -14,8 +14,8 @@ import httpx
 from .check_downloads import check_all_downloads, check_download
 from .check_funnel import check_all_funnels
 from .check_links import check_all_links
-from .common import PROJECT_DIR, load_config
-from .discover import diff_with_last_run, discover_links
+from .common import PROJECT_DIR, load_config, load_linkliste
+from .discover import diff_with_last_run
 from .report import build_report, notify_macos, send_via_apple_mail
 
 
@@ -32,10 +32,12 @@ async def main() -> int:
         with open(log, "a", encoding="utf-8") as f:
             f.write(line + "\n")
 
-    say("1/4 Link-Entdeckung läuft ...")
-    links, discover_log = await discover_links(config, screenshots_dir=shots_dir)
-    for line in discover_log:
-        say("   " + line)
+    say("1/4 Versionierte Linkliste wird geladen ...")
+    links = load_linkliste()
+    if len(links) != 61:
+        say(f"ABBRUCH: Linkliste enthält {len(links)} statt 61 eindeutige Links")
+        return 1
+    say(f"   {len(links)} eindeutige Links / {sum(len(l.tarife) for l in links)} Tarifzuordnungen")
     neue, verschwundene = diff_with_last_run(links)
 
     say("2/4 Erreichbarkeits-Checks laufen ...")

@@ -44,6 +44,11 @@ FIELD_PATTERNS: dict[str, str] = {
 }
 
 DOWNLOAD_LINK = re.compile(r"\.pdf(\?|$)|download", re.I)
+CAPTCHA_PATTERN = re.compile(
+    r"captcha|recaptcha|hcaptcha|turnstile|ich bin kein roboter|"
+    r"are you human|verify you are human|bot detection|access denied|zugriff verweigert",
+    re.I,
+)
 
 # JS: sichtbare, leere Formularfelder samt Kontext (Label etc.) einsammeln
 COLLECT_FIELDS_JS = """() => {
@@ -273,6 +278,30 @@ class FunnelRunner:
         self.found_downloads: dict[str, str] = {}
 
     # ---------- Hilfen ----------
+
+    async def _manual_reason(self, page, response=None) -> str:
+        """CAPTCHA/Bot-Sperre erkennen, ohne sie zu bedienen oder zu umgehen."""
+        status = response.status if response is not None else 0
+        texts: list[str] = [page.url]
+        for frame in page.frames:
+            try:
+                texts.append(await frame.title())
+                texts.append((await frame.locator("body").inner_text(timeout=1500))[:5000])
+                marker = await frame.locator(
+                    "iframe[src*='captcha' i], [class*='captcha' i], [id*='captcha' i], "
+                    "iframe[src*='challenges.cloudflare.com' i]"
+                ).count()
+                if marker:
+                    return "CAPTCHA/Bot-Challenge erkannt"
+            except Exception:
+                continue
+        combined = " ".join(texts)
+        if CAPTCHA_PATTERN.search(combined):
+            return "CAPTCHA/Bot-Sperre im Seiteninhalt erkannt"
+        visible_len = len(" ".join(combined.split()))
+        if status in (403, 429) and visible_len < 800:
+            return f"HTTP {status} mit leerer/unklarer Seite (Bot-Sperre möglich)"
+        return ""
 
     async def _collect_validation_errors(self, frames) -> list[str]:
         """Sichtbare Validierungs-/Fehlermeldungen von der Seite einsammeln."""
@@ -596,8 +625,8 @@ class FunnelRunner:
             except Exception as exc:
                 label = field["label"] or field["name"] or field["id"] or field["type"]
                 result.details.append(f"Feld nicht ausfüllbar: '{label[:60]}' ({type(exc).__name__})")
-                if result.status == "ok":
-                    result.status = "warnung"
+                if result.status == "OK":
+                    result.status = "MANUELL_PRÜFEN"
         return filled
 
     async def _pick_custom_select(self, frame, field: dict) -> bool:
@@ -723,8 +752,13 @@ class FunnelRunner:
         page.set_default_timeout(timeout)
 
         try:
-            await page.goto(link.url, timeout=45000, wait_until="domcontentloaded")
+            response = await page.goto(link.url, timeout=45000, wait_until="domcontentloaded")
             await page.wait_for_timeout(2500)
+            manual_reason = await self._manual_reason(page, response)
+            if manual_reason:
+                result.status = "MANUELL_PRÜFEN"
+                result.details.append(manual_reason + "; keine weitere Interaktion")
+                return result
             dismissed = await dismiss_consent(page)
             await self._wait_until_ready(page)
             if not dismissed:
@@ -740,6 +774,11 @@ class FunnelRunner:
                 result.steps_done = step
                 await page.wait_for_timeout(1500)
                 await self._shoot(page, link, step, result)
+                manual_reason = await self._manual_reason(page)
+                if manual_reason:
+                    result.status = "MANUELL_PRÜFEN"
+                    result.details.append(manual_reason + "; keine weitere Interaktion")
+                    return result
 
                 frames = [f for f in page.frames if f.url not in ("", "about:blank")] or [page.main_frame]
                 for frame in frames:
@@ -809,7 +848,7 @@ class FunnelRunner:
                                 f"nach {step} Schritt(en)"
                             )
                             return result
-                    result.status = "fehler"
+                    result.status = "MANUELL_PRÜFEN"
                     result.details.append(
                         f"Kein aktiver Weiter- oder Abschluss-Button in Schritt {step} gefunden"
                     )
@@ -848,7 +887,7 @@ class FunnelRunner:
                     try:
                         await next_el.evaluate("e => e.click()")
                     except Exception:
-                        result.status = "fehler"
+                        result.status = "DEFEKT"
                         result.details.append(
                             f"'{next_text}' in Schritt {step} nicht klickbar"
                         )
@@ -877,7 +916,7 @@ class FunnelRunner:
                 else:
                     last_state = after
 
-            result.status = "warnung"
+            result.status = "MANUELL_PRÜFEN"
             result.details.append(
                 f"Abschluss-Button nach {self.config['funnel']['max_steps']} Schritten nicht erreicht"
             )
@@ -889,7 +928,7 @@ class FunnelRunner:
                 pass
             return result
         except Exception as exc:
-            result.status = "fehler"
+            result.status = "DEFEKT"
             result.details.append(f"Strecke abgebrochen: {type(exc).__name__}: {str(exc)[:200]}")
             return result
         finally:
@@ -898,6 +937,14 @@ class FunnelRunner:
                     "JS-Fehler auf der Seite: " + " | ".join(sorted(set(console_errors))[:5])
                 )
             await page.close()
+
+
+def select_funnel_targets(links: list[LinkInfo], config: dict) -> list[LinkInfo]:
+    """Nur Abschlusslinks auswählen; Tracking-Redirects bleiben HTTP-only."""
+    targets = [l for l in links if l.kategorie == "abschluss" and l.typ != "tracking"]
+    if not config["funnel"].get("allow_external_click_through", True):
+        targets = [l for l in targets if l.typ == "intern"]
+    return targets
 
 
 async def check_all_funnels(
@@ -910,9 +957,7 @@ async def check_all_funnels(
 
     runner = FunnelRunner(config, screenshots_dir)
     results: list[CheckResult] = []
-    targets = [l for l in links if l.kategorie == "abschluss"]
-    if not config["funnel"].get("allow_external_click_through", True):
-        targets = [l for l in targets if l.typ == "intern"]
+    targets = select_funnel_targets(links, config)
 
     async with async_playwright() as pw:
         browser = await pw.chromium.launch(headless=True)
@@ -931,12 +976,12 @@ async def check_all_funnels(
                     result = await runner.run(context, link)
                 finally:
                     await context.close()
-                if result.status != "fehler":
+                if result.status != "DEFEKT":
                     break
                 if attempt == 1:
                     result.details.append("Erster Versuch fehlgeschlagen, wiederhole einmal ...")
                     first_details = list(result.details)
-            if result.status == "fehler" and attempt == 2:
+            if result.status == "DEFEKT" and attempt == 2:
                 result.details = first_details + ["--- 2. Versuch ---"] + result.details
             results.append(result)
         await browser.close()

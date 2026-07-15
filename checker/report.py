@@ -19,8 +19,8 @@ TEMPLATE = Template(
   body { font-family: -apple-system, Helvetica, Arial, sans-serif; margin: 24px; color: #1a2b3c; }
   h1 { font-size: 22px; } h2 { font-size: 17px; margin-top: 28px; }
   .zusammenfassung { padding: 12px 16px; border-radius: 8px; margin: 12px 0;
-    background: {{ '#e6f4ea' if fehler == 0 else '#fdecea' }};
-    border: 1px solid {{ '#34a853' if fehler == 0 else '#ea4335' }}; }
+    background: {{ '#e6f4ea' if fehler == 0 and pruefbedarf == 0 else '#fff8e1' if fehler == 0 else '#fdecea' }};
+    border: 1px solid {{ '#34a853' if fehler == 0 and pruefbedarf == 0 else '#f9ab00' if fehler == 0 else '#ea4335' }}; }
   table { border-collapse: collapse; width: 100%; margin-top: 8px; }
   th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #ddd;
            font-size: 13px; vertical-align: top; }
@@ -34,9 +34,9 @@ TEMPLATE = Template(
 </style>
 </head>
 <body>
-<h1>Wöchentlicher Abschlusslink-Check &ndash; {{ datum }}</h1>
+<h1>{{ titel }} &ndash; {{ datum }}</h1>
 <div class="zusammenfassung">
-  <strong>{{ 'Alles in Ordnung.' if fehler == 0 else (fehler ~ ' Problem(e) gefunden!') }}</strong><br>
+  <strong>{{ 'Alles in Ordnung.' if fehler == 0 and pruefbedarf == 0 else ((pruefbedarf ~ ' Ergebnis(se) manuell prüfen.') if fehler == 0 else (fehler ~ ' Defekt(e) gefunden!')) }}</strong><br>
   {{ funnel_ok }}/{{ funnel_gesamt }} Abschlussstrecken erfolgreich bis zum Abschluss-Button durchgeklickt,
   {{ http_ok }}/{{ http_gesamt }} Links erreichbar,
   {{ dl_ok }}/{{ dl_gesamt }} Downloads in Ordnung.
@@ -55,8 +55,13 @@ TEMPLATE = Template(
 <tr><th>Status</th><th>Tarif / Strecke</th><th>Schritte</th><th>Details</th></tr>
 {% for r in funnels %}
 <tr>
-  <td class="{{ r.status }}">{{ r.status | upper }}</td>
-  <td>{{ r.link.tarif or '-' }} ({{ r.link.typ }})<div class="url">{{ r.link.url }}</div></td>
+  <td class="{{ 'ok' if r.status in ('OK', 'WEITERLEITUNG_OK') else ('fehler' if r.status == 'DEFEKT' else 'warnung') }}">{{ r.status }}</td>
+  <td><strong>{{ r.link.gesellschaft or '-' }}</strong><br>{{ r.link.tarif or '-' }} ({{ r.link.typ }})
+    <div class="url">{{ r.link.url }}</div>
+    {% if r.link.tarife %}<details><summary>{{ r.link.tarife | length }} zugeordnete Tarife</summary><ul>
+      {% for t in r.link.tarife %}<li>{{ t.name }} – {{ t.tarifseite }}</li>{% endfor %}
+    </ul></details>{% endif %}
+  </td>
   <td>{{ r.steps_done }}</td>
   <td>
     {% if r.stop_button %}Abschluss-Button erreicht: &bdquo;{{ r.stop_button }}&ldquo;<br>{% endif %}
@@ -74,8 +79,8 @@ TEMPLATE = Template(
 <tr><th>Status</th><th>Link</th><th>Details</th></tr>
 {% for r in https %}
 <tr>
-  <td class="{{ r.status }}">{{ r.status | upper }}</td>
-  <td>{{ r.link.tarif or r.link.kategorie }}<div class="url">{{ r.link.url }}</div></td>
+  <td class="{{ 'ok' if r.status in ('OK', 'WEITERLEITUNG_OK') else ('fehler' if r.status == 'DEFEKT' else 'warnung') }}">{{ r.status }}</td>
+  <td><strong>{{ r.link.gesellschaft or '-' }}</strong><br>{{ r.link.tarif or r.link.kategorie }}<div class="url">{{ r.link.url }}</div></td>
   <td>{{ r.details | join(' | ') }}</td>
 </tr>
 {% endfor %}
@@ -87,7 +92,7 @@ TEMPLATE = Template(
 <tr><th>Status</th><th>Datei</th><th>Details</th></tr>
 {% for r in downloads %}
 <tr>
-  <td class="{{ r.status }}">{{ r.status | upper }}</td>
+  <td class="{{ 'ok' if r.status in ('OK', 'WEITERLEITUNG_OK') else ('fehler' if r.status == 'DEFEKT' else 'warnung') }}">{{ r.status }}</td>
   <td class="url">{{ r.link.url }}<br>gefunden auf: {{ r.link.quelle }}</td>
   <td>{{ r.details | join(' | ') }}</td>
 </tr>
@@ -111,22 +116,28 @@ def build_report(
     downloads: list[CheckResult],
     neue: list[str],
     verschwundene: list[str],
+    titel: str = "Wöchentlicher Abschlusslink-Check",
 ) -> tuple[Path, str, int]:
     """HTML-Report schreiben. Gibt (Pfad, Betreff, Fehlerzahl) zurück."""
     datum = run_dir.name
-    fehler = sum(1 for r in funnels + https + downloads if r.status == "fehler")
+    fehler = sum(1 for r in funnels + https + downloads if r.status == "DEFEKT")
+    pruefbedarf = sum(
+        1 for r in funnels + https + downloads if r.status == "MANUELL_PRÜFEN"
+    )
     html = TEMPLATE.render(
         datum=datum,
+        titel=titel,
         erzeugt=datetime.now().strftime("%d.%m.%Y %H:%M"),
         fehler=fehler,
-        funnels=sorted(funnels, key=lambda r: (r.status != "fehler", r.status != "warnung")),
-        https=sorted(https, key=lambda r: (r.status != "fehler", r.status != "warnung")),
-        downloads=sorted(downloads, key=lambda r: (r.status != "fehler", r.status != "warnung")),
-        funnel_ok=sum(1 for r in funnels if r.status == "ok"),
+        pruefbedarf=pruefbedarf,
+        funnels=sorted(funnels, key=lambda r: (r.status != "DEFEKT", r.status != "MANUELL_PRÜFEN")),
+        https=sorted(https, key=lambda r: (r.status != "DEFEKT", r.status != "MANUELL_PRÜFEN")),
+        downloads=sorted(downloads, key=lambda r: (r.status != "DEFEKT", r.status != "MANUELL_PRÜFEN")),
+        funnel_ok=sum(1 for r in funnels if r.status == "OK"),
         funnel_gesamt=len(funnels),
-        http_ok=sum(1 for r in https if r.status == "ok"),
+        http_ok=sum(1 for r in https if r.status in ("OK", "WEITERLEITUNG_OK")),
         http_gesamt=len(https),
-        dl_ok=sum(1 for r in downloads if r.status == "ok"),
+        dl_ok=sum(1 for r in downloads if r.status == "OK"),
         dl_gesamt=len(downloads),
         neue=neue,
         verschwundene=verschwundene,
@@ -134,8 +145,10 @@ def build_report(
     report_path = run_dir / "report.html"
     report_path.write_text(html, encoding="utf-8")
 
-    if fehler == 0:
-        subject = f"[Linkcheck] OK – {sum(1 for r in funnels if r.status == 'ok')}/{len(funnels)} Strecken in Ordnung"
+    if fehler == 0 and pruefbedarf == 0:
+        subject = f"[Linkcheck] OK – {sum(1 for r in funnels if r.status == 'OK')}/{len(funnels)} Strecken in Ordnung"
+    elif fehler == 0:
+        subject = f"[Linkcheck] PRÜFBEDARF – {pruefbedarf} Ergebnis(se) manuell prüfen"
     else:
         subject = f"[Linkcheck] FEHLER – {fehler} Problem(e) gefunden"
     return report_path, subject, fehler

@@ -30,26 +30,32 @@ async def check_link(client: httpx.AsyncClient, link: LinkInfo) -> CheckResult:
         elapsed = time.monotonic() - start
         chain = [str(r.url) for r in resp.history] + [str(resp.url)]
 
-        if resp.status_code >= 400:
-            result.status = "fehler"
+        if resp.status_code in (403, 429):
+            result.status = "MANUELL_PRÜFEN"
+            result.details.append(f"HTTP {resp.status_code}: Sperre/Bot-Schutz möglich")
+        elif resp.status_code >= 400:
+            result.status = "DEFEKT"
             result.details.append(f"HTTP {resp.status_code} für {link.url}")
         else:
             result.details.append(f"HTTP {resp.status_code} in {elapsed:.1f}s")
 
         if len(chain) > 1:
+            if result.status == "OK":
+                result.status = "WEITERLEITUNG_OK"
             result.details.append("Redirect-Kette: " + " -> ".join(chain))
+        result.details.append(f"Finale URL: {resp.url}")
 
         # Soft-404: Server liefert 200, aber eine Fehlerseite
         text_start = resp.text[:4000].lower()
         if resp.status_code == 200 and (
             "seite wurde nicht gefunden" in text_start or "404" in (resp.url.path or "")
         ):
-            result.status = "fehler"
+            result.status = "DEFEKT"
             result.details.append("Soft-404: Seite meldet 'nicht gefunden' trotz HTTP 200")
 
         if elapsed > 10:
-            if result.status == "ok":
-                result.status = "warnung"
+            if result.status in ("OK", "WEITERLEITUNG_OK"):
+                result.status = "MANUELL_PRÜFEN"
             result.details.append(f"Langsame Antwort: {elapsed:.1f}s")
 
         # Vermittler-Parameter dürfen in der Redirect-Kette nicht verloren gehen.
@@ -58,16 +64,17 @@ async def check_link(client: httpx.AsyncClient, link: LinkInfo) -> CheckResult:
             params_end = _vermittler_params(str(resp.url))
             lost = {k: v for k, v in params_start.items() if params_end.get(k) != v}
             if lost and not params_end:
-                if result.status == "ok":
-                    result.status = "warnung"
+                if result.status in ("OK", "WEITERLEITUNG_OK"):
+                    result.status = "MANUELL_PRÜFEN"
                 result.details.append(
                     "Vermittler-Parameter nach Redirect nicht mehr in der URL: "
                     + ", ".join(sorted(lost))
                     + " (kann in Session/Cookie stecken, bitte Strecken-Check beachten)"
                 )
     except Exception as exc:
-        result.status = "fehler"
-        result.details.append(f"Nicht erreichbar: {exc}")
+        result.status = "DEFEKT"
+        message = str(exc).strip() or type(exc).__name__
+        result.details.append(f"Nicht erreichbar: {type(exc).__name__}: {message}")
     return result
 
 

@@ -1,5 +1,8 @@
 # Laufergebnisse (Screenshots enthalten ausgefüllte Antragsseiten)
 reports/
+# Lokale Codex-Arbeits- und Übergabedateien
+work/
+outputs/
 # Python
 .venv/
 __pycache__/

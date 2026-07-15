@@ -60,6 +60,12 @@ funnel:
   # Alles andere Externe wird nur auf Erreichbarkeit geprüft.
   allow_external_click_through: true
 
+uebersicht:
+  url: "https://www.test-zahnzusatzversicherung.de/teilnehmende-versicherungen-und-tarife/"
+  delay_ms: 300
+  min_tarifseiten: 400
+  max_scan_fehler: 20
+
 downloads:
   min_pdf_bytes: 10240
 

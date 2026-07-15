@@ -30,7 +30,7 @@ async def check_download(client: httpx.AsyncClient, url: str, quelle: str, min_b
     try:
         resp = await client.get(url)
         if resp.status_code >= 400:
-            result.status = "fehler"
+            result.status = "DEFEKT"
             result.details.append(f"HTTP {resp.status_code}")
             return result
         content = resp.content
@@ -38,13 +38,13 @@ async def check_download(client: httpx.AsyncClient, url: str, quelle: str, min_b
         result.details.append(f"HTTP {resp.status_code}, {len(content)} Bytes, {ctype}")
         if PDF_LINK.search(url) or "pdf" in ctype:
             if not content.startswith(b"%PDF"):
-                result.status = "fehler"
+                result.status = "DEFEKT"
                 result.details.append("Datei ist kein gültiges PDF (fehlender %PDF-Header)")
             elif len(content) < min_bytes:
-                result.status = "warnung"
+                result.status = "MANUELL_PRÜFEN"
                 result.details.append(f"PDF verdächtig klein (< {min_bytes} Bytes)")
     except Exception as exc:
-        result.status = "fehler"
+        result.status = "DEFEKT"
         result.details.append(f"Download fehlgeschlagen: {exc}")
     return result
 

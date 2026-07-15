@@ -29,6 +29,8 @@ class LinkInfo:
     quelle: str = ""          # Seite/Profil, auf der der Link gefunden wurde
     typ: str = "intern"       # intern | extern
     kategorie: str = "abschluss"  # abschluss | detail
+    gesellschaft: str = ""
+    tarife: list[dict[str, str]] = field(default_factory=list)
 
 
 @dataclass
@@ -36,11 +38,43 @@ class CheckResult:
     """Ergebnis einer Einzelprüfung."""
     link: LinkInfo
     check: str                # http | funnel | download
-    status: str = "ok"        # ok | warnung | fehler
+    status: str = "OK"        # OK | WEITERLEITUNG_OK | MANUELL_PRÜFEN | DEFEKT
     details: list[str] = field(default_factory=list)
     screenshots: list[str] = field(default_factory=list)
     steps_done: int = 0
     stop_button: str = ""     # Text des erreichten Abschluss-Buttons
+
+
+def load_linkliste(path: Path | None = None) -> list[LinkInfo]:
+    """Versionierte Abschlusslinks laden und exakt nach URL deduplizieren."""
+    source = path or PROJECT_DIR / "linkliste.yaml"
+    raw = yaml.safe_load(source.read_text(encoding="utf-8")) or []
+    dedup: dict[str, LinkInfo] = {}
+    for item in raw:
+        url = str(item.get("abschluss_url", "")).strip()
+        if not url:
+            continue
+        tarife = list(item.get("tarife") or [])
+        typ = item.get("typ") or ("tracking" if "financeads.net/" in url else "extern")
+        current = dedup.get(url)
+        if current is None:
+            dedup[url] = LinkInfo(
+                url=url,
+                tarif=", ".join(str(t.get("name", "")) for t in tarife[:3]),
+                quelle="linkliste.yaml",
+                typ=typ,
+                kategorie="abschluss",
+                gesellschaft=str(item.get("gesellschaft", "")),
+                tarife=tarife,
+            )
+        else:
+            known = {t.get("tarifseite") for t in current.tarife}
+            current.tarife.extend(t for t in tarife if t.get("tarifseite") not in known)
+            names = [str(t.get("name", "")) for t in current.tarife[:3]]
+            current.tarif = ", ".join(names)
+            if item.get("gesellschaft") and item["gesellschaft"] not in current.gesellschaft:
+                current.gesellschaft += " / " + str(item["gesellschaft"])
+    return list(dedup.values())
 
 
 def is_internal(url: str, base_url: str) -> bool:
