@@ -959,15 +959,19 @@ async def check_all_funnels(
     results: list[CheckResult] = []
     targets = select_funnel_targets(links, config)
 
+    from .browser_probe import launch_browser
+
     async with async_playwright() as pw:
-        browser = await pw.chromium.launch(headless=True)
+        # Volles Chromium und Standard-Browser-Kennung: manche Versicherer
+        # (ERGO, Allianz, ottonova) blocken die Headless-Shell bzw. eigene
+        # User-Agents als Bot, obwohl die Strecke für Kunden funktioniert.
+        browser = await launch_browser(pw)
         for link in targets:
             result = None
             # Bei Fehlern einmal wiederholen: Lade-Flakiness (SPA-Wizards,
             # langsame Versicherer-Server) soll keinen Fehlalarm auslösen.
             for attempt in (1, 2):
                 context = await browser.new_context(
-                    user_agent=config["user_agent"],
                     viewport={"width": 1280, "height": 900},
                     locale="de-DE",
                 )

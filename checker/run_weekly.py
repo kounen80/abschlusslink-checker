@@ -11,6 +11,7 @@ from pathlib import Path
 
 import httpx
 
+from .browser_probe import escalate_blocked
 from .check_downloads import check_all_downloads, check_download
 from .check_funnel import check_all_funnels
 from .check_links import check_all_links
@@ -44,6 +45,9 @@ async def main() -> int:
 
     say("2/4 Erreichbarkeits-Checks laufen ...")
     http_results = await check_all_links(links, config)
+    upgraded = await escalate_blocked(http_results, config)
+    if upgraded:
+        say(f"   {upgraded} Bot-Schutz-Treffer per Browser-Nachprüfung als OK bestätigt")
 
     say("3/4 Klickstrecken-Tests laufen (das dauert einige Minuten) ...")
     funnel_results, funnel_downloads = await check_all_funnels(links, config, shots_dir)
