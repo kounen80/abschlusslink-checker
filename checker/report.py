@@ -157,14 +157,21 @@ def build_report(
 def send_via_apple_mail(
     report_path: Path, subject: str, body: str, recipient: str, sender: str = ""
 ) -> bool:
-    """Report als Anhang über Apple Mail verschicken (AppleScript)."""
+    """Report als Anhang über Apple Mail verschicken (AppleScript).
+
+    recipient darf mehrere Adressen enthalten (durch Komma getrennt).
+    """
     sender_line = f'set sender of neueNachricht to "{sender}"' if sender else ""
+    recipient_lines = "\n            ".join(
+        f'make new to recipient at end of to recipients with properties {{address:"{addr.strip()}"}}'
+        for addr in recipient.split(",") if addr.strip()
+    )
     script = f'''
     tell application "Mail"
         set neueNachricht to make new outgoing message with properties {{subject:"{subject}", content:"{body}\n\n", visible:false}}
         {sender_line}
         tell neueNachricht
-            make new to recipient at end of to recipients with properties {{address:"{recipient}"}}
+            {recipient_lines}
             make new attachment with properties {{file name:POSIX file "{report_path}"}} at after the last paragraph
         end tell
         delay 2

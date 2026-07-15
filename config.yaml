@@ -71,7 +71,8 @@ downloads:
 
 report:
   dir: "reports"
-  email_to: "info@test-zahnzusatzversicherung.de"
+  # Mehrere Empfänger durch Komma getrennt möglich
+  email_to: "konrad.diessl@gmail.com, info@test-zahnzusatzversicherung.de"
   # Absender-Konto in Apple Mail (muss dort eingerichtet sein)
   email_from: "konrad.diessl@gmail.com"
   email_subject_ok: "[Linkcheck] OK – {ok}/{total} Strecken in Ordnung"
