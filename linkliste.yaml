@@ -179,23 +179,12 @@
   - name: Dental Medium (AZM)
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/advigon/dental-medium-azm/
 - gesellschaft: HanseMerkur
-  abschluss_url: https://secure2.hansemerkur.de/ola-ui/1/100?adnr=4161618
+  abschluss_url: https://secure2.hansemerkur.de/ola-ui2/1/100?adnr=4161618&beragprtkhm=ja
   tarife:
-  - name: Zahnzusatz Basis plus Prophylaxe
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/hansemerkur/hansemerkur-ez-eze-ezp/
-  - name: EZ+EZE
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/hansemerkur/hansemerkur-ez-eze/
   - name: EZ
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/hansemerkur/hansemerkur-ez/
   - name: EZ+EZT
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/hansemerkur/hansemerkur-ezezt/
-  - name: EZ+EZT+EZP
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/hansemerkur/hansemerkur-ezeztezp/
-- gesellschaft: HanseMerkur
-  abschluss_url: https://secure2.hansemerkur.de/ola-ui/1/110?adnr=4161618&etpn=Zahnvorsorgeversicherung&etsc=PFsU6m
-  tarife:
-  - name: EZP
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/hansemerkur/hansemerkur-ezp/
 - gesellschaft: Barmenia
   abschluss_url: https://ssl.barmenia.de/oa-ambulant/#/Beitrag?adm=00104231&sparte=sonstige&p0=234003
   tarife:
