@@ -6,6 +6,8 @@
     <string>de.ovv.abschlusslink-checker</string>
     <key>ProgramArguments</key>
     <array>
+        <string>/usr/bin/caffeinate</string>
+        <string>-i</string>
         <string>/Users/konrad/.local/bin/uv</string>
         <string>run</string>
         <string>--project</string>

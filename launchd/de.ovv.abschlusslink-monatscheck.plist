@@ -3,6 +3,7 @@
 <plist version="1.0"><dict>
     <key>Label</key><string>de.ovv.abschlusslink-monatscheck</string>
     <key>ProgramArguments</key><array>
+        <string>/usr/bin/caffeinate</string><string>-i</string>
         <string>/Users/konrad/.local/bin/uv</string><string>run</string><string>--project</string>
         <string>/Users/konrad/KI-Projekte/abschlusslink-checker</string>
         <string>python</string><string>-m</string><string>checker.run_monthly</string>
