@@ -10,7 +10,7 @@
     </array>
     <key>WorkingDirectory</key><string>/Users/konrad/KI-Projekte/abschlusslink-checker</string>
     <key>StartCalendarInterval</key><dict>
-        <key>Hour</key><integer>10</integer><key>Minute</key><integer>0</integer>
+        <key>Hour</key><integer>7</integer><key>Minute</key><integer>0</integer>
     </dict>
     <key>StandardOutPath</key><string>/Users/konrad/KI-Projekte/abschlusslink-checker/reports/launchd-daily.log</string>
     <key>StandardErrorPath</key><string>/Users/konrad/KI-Projekte/abschlusslink-checker/reports/launchd-daily.log</string>
