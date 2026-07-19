@@ -14,6 +14,10 @@ TEMPLATE = Template(
 <html lang="de">
 <head>
 <meta charset="utf-8">
+<!-- Kein Referrer beim Anklicken der Abschlusslinks: der Versicherer sieht
+     nicht, dass der Aufruf aus diesem Prüfbericht kommt, und kann den Klick
+     keiner Kampagne/Quelle zuordnen. -->
+<meta name="referrer" content="no-referrer">
 <title>Abschlusslink-Check {{ datum }}</title>
 <style>
   body { font-family: -apple-system, Helvetica, Arial, sans-serif; margin: 24px; color: #1a2b3c; }
@@ -28,6 +32,11 @@ TEMPLATE = Template(
   .warnung { color: #b06000; font-weight: 600; }
   .fehler { color: #c5221f; font-weight: 600; }
   .url { color: #666; font-size: 11px; word-break: break-all; }
+  .url a, a.pruef { color: #1a73e8; }
+  a.pruef { display: inline-block; margin-top: 3px; font-size: 11px; font-weight: 600;
+            padding: 2px 8px; border: 1px solid #1a73e8; border-radius: 4px;
+            text-decoration: none; white-space: nowrap; }
+  a.pruef:hover { background: #1a73e8; color: #fff; }
   details ul { margin: 4px 0; padding-left: 18px; }
   li { font-size: 12px; }
   .neu { background: #fff8e1; }
@@ -57,7 +66,8 @@ TEMPLATE = Template(
 <tr>
   <td class="{{ 'ok' if r.status in ('OK', 'WEITERLEITUNG_OK') else ('fehler' if r.status == 'DEFEKT' else 'warnung') }}">{{ r.status }}</td>
   <td><strong>{{ r.link.gesellschaft or '-' }}</strong><br>{{ r.link.tarif or '-' }} ({{ r.link.typ }})
-    <div class="url">{{ r.link.url }}</div>
+    <div class="url"><a href="{{ r.link.url }}" target="_blank" rel="noopener noreferrer">{{ r.link.url }}</a></div>
+    <a class="pruef" href="{{ r.link.url }}" target="_blank" rel="noopener noreferrer">Abschlussseite prüfen &rarr;</a>
     {% if r.link.tarife %}<details><summary>{{ r.link.tarife | length }} zugeordnete Tarife</summary><ul>
       {% for t in r.link.tarife %}<li>{{ t.name }} – {{ t.tarifseite }}</li>{% endfor %}
     </ul></details>{% endif %}
@@ -80,7 +90,9 @@ TEMPLATE = Template(
 {% for r in https %}
 <tr>
   <td class="{{ 'ok' if r.status in ('OK', 'WEITERLEITUNG_OK') else ('fehler' if r.status == 'DEFEKT' else 'warnung') }}">{{ r.status }}</td>
-  <td><strong>{{ r.link.gesellschaft or '-' }}</strong><br>{{ r.link.tarif or r.link.kategorie }}<div class="url">{{ r.link.url }}</div></td>
+  <td><strong>{{ r.link.gesellschaft or '-' }}</strong><br>{{ r.link.tarif or r.link.kategorie }}
+    <div class="url"><a href="{{ r.link.url }}" target="_blank" rel="noopener noreferrer">{{ r.link.url }}</a></div>
+    <a class="pruef" href="{{ r.link.url }}" target="_blank" rel="noopener noreferrer">Abschlussseite prüfen &rarr;</a></td>
   <td>{{ r.details | join(' | ') }}</td>
 </tr>
 {% endfor %}
@@ -102,7 +114,11 @@ TEMPLATE = Template(
 
 <p style="color:#999; font-size:11px; margin-top:32px;">
 Erzeugt am {{ erzeugt }} vom OVV-LinkChecker. Es wurde kein Antrag abgesendet;
-Abschluss-Buttons werden erreicht, aber nie geklickt.
+Abschluss-Buttons werden erreicht, aber nie geklickt.<br>
+Die Abschlusslinks öffnen in einem neuen Tab und werden ohne Referrer aufgerufen
+(<code>rel="noopener noreferrer"</code>), der Versicherer kann den Klick also nicht
+diesem Bericht oder unserer Seite zuordnen. Ein eigener Einstiegszähler beim
+Versicherer lässt sich dabei nicht abschalten.
 </p>
 </body>
 </html>"""
