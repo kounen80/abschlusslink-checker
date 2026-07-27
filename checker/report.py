@@ -1,6 +1,7 @@
 """HTML-Report erzeugen und per Apple Mail verschicken."""
 from __future__ import annotations
 
+import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -45,10 +46,15 @@ TEMPLATE = Template(
 <body>
 <h1>{{ titel }} &ndash; {{ datum }}</h1>
 <div class="zusammenfassung">
-  <strong>{{ 'Alles in Ordnung.' if fehler == 0 and pruefbedarf == 0 else ((pruefbedarf ~ ' Ergebnis(se) manuell prüfen.') if fehler == 0 else (fehler ~ ' Defekt(e) gefunden!')) }}</strong><br>
-  {{ funnel_ok }}/{{ funnel_gesamt }} Abschlussstrecken erfolgreich bis zum Abschluss-Button durchgeklickt,
-  {{ http_ok }}/{{ http_gesamt }} Links erreichbar,
-  {{ dl_ok }}/{{ dl_gesamt }} Downloads in Ordnung.
+  <strong>{{ 'Alles in Ordnung.' if n_kaputt == 0 and n_botschutz == 0 and n_klick == 0
+       else (n_kaputt ~ ' echt defekt – bitte prüfen.') if n_kaputt
+       else 'Kein echter Defekt. Nur Bot-Schutz / unvollständige Klickautomatik.' }}</strong><br>
+  <span style="color:#c5221f;font-weight:600;">{{ n_kaputt }} echt defekt</span> (Handlungsbedarf) &nbsp;·&nbsp;
+  <span style="color:#b06000;">{{ n_botschutz }} Bot-Schutz</span> (Link erreichbar) &nbsp;·&nbsp;
+  <span style="color:#666;">{{ n_klick }} Klickstrecke unvollständig</span> (Automatik) &nbsp;·&nbsp;
+  {{ funnel_ok }}/{{ funnel_gesamt }} voll durchgeklickt,
+  {{ http_ok }}/{{ http_gesamt }} erreichbar,
+  {{ dl_ok }}/{{ dl_gesamt }} Downloads ok.
 </div>
 
 {% if neue or verschwundene %}
@@ -64,7 +70,7 @@ TEMPLATE = Template(
 <tr><th>Status</th><th>Tarif / Strecke</th><th>Schritte</th><th>Details</th></tr>
 {% for r in funnels %}
 <tr>
-  <td class="{{ 'ok' if r.status in ('OK', 'WEITERLEITUNG_OK') else ('fehler' if r.status == 'DEFEKT' else 'warnung') }}">{{ r.status }}</td>
+  <td class="{{ 'fehler' if kat(r) == 'kaputt' else ('ok' if kat(r) == 'ok' else 'warnung') }}">{{ r.status }}{% if kat_label[kat(r)] %}<br><span style="font-size:10px;font-weight:400;">{{ kat_label[kat(r)] }}</span>{% endif %}</td>
   <td><strong>{{ r.link.gesellschaft or '-' }}</strong><br>{{ r.link.tarif or '-' }} ({{ r.link.typ }})
     <div class="url"><a href="{{ r.link.url }}" target="_blank" rel="noopener noreferrer">{{ r.link.url }}</a></div>
     <a class="pruef" href="{{ r.link.url }}" target="_blank" rel="noopener noreferrer">Abschlussseite prüfen &rarr;</a>
@@ -89,7 +95,7 @@ TEMPLATE = Template(
 <tr><th>Status</th><th>Link</th><th>Details</th></tr>
 {% for r in https %}
 <tr>
-  <td class="{{ 'ok' if r.status in ('OK', 'WEITERLEITUNG_OK') else ('fehler' if r.status == 'DEFEKT' else 'warnung') }}">{{ r.status }}</td>
+  <td class="{{ 'fehler' if kat(r) == 'kaputt' else ('ok' if kat(r) == 'ok' else 'warnung') }}">{{ r.status }}{% if kat_label[kat(r)] %}<br><span style="font-size:10px;font-weight:400;">{{ kat_label[kat(r)] }}</span>{% endif %}</td>
   <td><strong>{{ r.link.gesellschaft or '-' }}</strong><br>{{ r.link.tarif or r.link.kategorie }}
     <div class="url"><a href="{{ r.link.url }}" target="_blank" rel="noopener noreferrer">{{ r.link.url }}</a></div>
     <a class="pruef" href="{{ r.link.url }}" target="_blank" rel="noopener noreferrer">Abschlussseite prüfen &rarr;</a></td>
@@ -136,16 +142,33 @@ def build_report(
 ) -> tuple[Path, str, int]:
     """HTML-Report schreiben. Gibt (Pfad, Betreff, Fehlerzahl) zurück."""
     datum = run_dir.name
-    fehler = sum(1 for r in funnels + https + downloads if r.status == "DEFEKT")
-    pruefbedarf = sum(
-        1 for r in funnels + https + downloads if r.status == "MANUELL_PRÜFEN"
-    )
+    alle = funnels + https + downloads
+    fehler = sum(1 for r in alle if r.status == "DEFEKT")
+    pruefbedarf = sum(1 for r in alle if r.status == "MANUELL_PRÜFEN")
+    # Pro Kategorie über eindeutige Links zählen (ein Link taucht in Funnel-
+    # UND HTTP-Prüfung auf); je Link zählt die kritischste Einstufung.
+    rang = {"kaputt": 0, "botschutz": 1, "klick": 2, "ok": 3}
+    schlimmste: dict[str, str] = {}
+    for r in alle:
+        k = kategorie(r)
+        vorher = schlimmste.get(r.link.url)
+        if vorher is None or rang[k] < rang[vorher]:
+            schlimmste[r.link.url] = k
+    n_kaputt = sum(1 for k in schlimmste.values() if k == "kaputt")
+    n_botschutz = sum(1 for k in schlimmste.values() if k == "botschutz")
+    n_klick = sum(1 for k in schlimmste.values() if k == "klick")
     html = TEMPLATE.render(
         datum=datum,
         titel=titel,
         erzeugt=datetime.now().strftime("%d.%m.%Y %H:%M"),
         fehler=fehler,
         pruefbedarf=pruefbedarf,
+        n_kaputt=n_kaputt,
+        n_botschutz=n_botschutz,
+        n_klick=n_klick,
+        kat=kategorie,
+        kat_label={"kaputt": "ECHT DEFEKT", "botschutz": "Bot-Schutz (Link geht)",
+                   "klick": "Klickstrecke unvollständig", "ok": ""},
         funnels=sorted(funnels, key=lambda r: (r.status != "DEFEKT", r.status != "MANUELL_PRÜFEN")),
         https=sorted(https, key=lambda r: (r.status != "DEFEKT", r.status != "MANUELL_PRÜFEN")),
         downloads=sorted(downloads, key=lambda r: (r.status != "DEFEKT", r.status != "MANUELL_PRÜFEN")),
@@ -184,6 +207,32 @@ def _sort_key(r: CheckResult):
     return (r.status != "DEFEKT", r.status != "MANUELL_PRÜFEN")
 
 
+# Erkennt, ob ein "PRÜFEN" durch Bot-Schutz entstand (Link erreichbar, nur der
+# automatische Browser wird mit 403 geblockt), nicht durch einen echten Fehler.
+_BOTSCHUTZ = re.compile(
+    r"bot.?sperre|bot.?schutz|sperre/bot|403|zugriff verweigert|access denied",
+    re.I,
+)
+
+
+def kategorie(r: CheckResult) -> str:
+    """Ordnet ein Ergebnis einer Ampel-Kategorie zu.
+
+    kaputt   – echter Defekt (404/5xx, totes PDF): Handlungsbedarf.
+    botschutz – PRÜFEN, aber Link nachweislich erreichbar; nur der Automat
+                wird geblockt. Kein Fehler auf der Zielseite.
+    klick    – PRÜFEN, weil die Klickstrecke nicht bis zum Abschluss-Button
+                durchlief (unvollständige Automatik). Kein Kundenproblem.
+    ok       – alles in Ordnung.
+    """
+    if r.status == "DEFEKT":
+        return "kaputt"
+    if r.status == "MANUELL_PRÜFEN":
+        blob = " ".join(r.details)
+        return "botschutz" if _BOTSCHUTZ.search(blob) else "klick"
+    return "ok"
+
+
 def _kurz_detail(r: CheckResult, limit: int = 160) -> str:
     text = " ".join(" | ".join(r.details).split())
     return text[:limit] + ("…" if len(text) > limit else "")
@@ -205,8 +254,18 @@ def build_email_body(
     in die Mail, der HTML-Anhang bleibt nur für Details/Screenshots nötig.
     """
     alle = funnels + https + downloads
-    fehler = sum(r.status == "DEFEKT" for r in alle)
-    pruefbedarf = sum(r.status == "MANUELL_PRÜFEN" for r in alle)
+    # Nach URL entdoppeln: derselbe Link taucht in Funnel- UND HTTP-Prüfung auf.
+    # Für jede URL zählt die kritischste Einstufung, ein Repräsentant je URL.
+    rang = {"kaputt": 0, "botschutz": 1, "klick": 2, "ok": 3}
+    best: dict[str, CheckResult] = {}
+    for r in alle:
+        k = kategorie(r)
+        cur = best.get(r.link.url)
+        if cur is None or rang[k] < rang[kategorie(cur)]:
+            best[r.link.url] = r
+    kaputt = [r for r in best.values() if kategorie(r) == "kaputt"]
+    botschutz = [r for r in best.values() if kategorie(r) == "botschutz"]
+    klick = [r for r in best.values() if kategorie(r) == "klick"]
     ok = sum(r.status in ("OK", "WEITERLEITUNG_OK") for r in alle)
 
     def name_of(r: CheckResult) -> str:
@@ -216,55 +275,66 @@ def build_email_body(
 
     lines: list[str] = [f"{titel} vom {datum}", ""]
 
-    if fehler:
-        lines.append(f"ERGEBNIS: {fehler} DEFEKT, {pruefbedarf} manuell prüfen, {ok} in Ordnung.")
-    elif pruefbedarf:
+    if kaputt:
         lines.append(
-            f"ERGEBNIS: keine Defekte, aber {pruefbedarf} Ergebnis(se) manuell prüfen "
-            f"({ok} in Ordnung)."
+            f"ERGEBNIS: {len(kaputt)} echt defekt und dringend prüfen. "
+            f"Der Rest ist unkritisch (siehe unten)."
+        )
+    elif botschutz or klick:
+        lines.append(
+            "ERGEBNIS: kein echter Defekt. Alle Auffälligkeiten sind "
+            "Bot-Schutz oder unvollständige Klickautomatik, keine Kundenprobleme."
         )
     else:
         lines.append(f"ERGEBNIS: alles in Ordnung ({ok} Prüfungen ohne Beanstandung).")
 
     lines += ["", "KURZÜBERSICHT"]
-    if funnels:
-        fok = sum(r.status == "OK" for r in funnels)
-        lines.append(f"  Klickstrecken:  {fok}/{len(funnels)} bis zum Abschluss-Button")
+    lines.append(f"  Echt defekt:            {len(kaputt)}  (Handlungsbedarf)")
+    lines.append(f"  Bot-Schutz, Link geht:  {len(botschutz)}  (kein Fehler)")
+    lines.append(f"  Klickstrecke unvollst.: {len(klick)}  (Automatik, kein Fehler)")
     hok = sum(r.status in ("OK", "WEITERLEITUNG_OK") for r in https)
-    lines.append(f"  Erreichbarkeit: {hok}/{len(https)} Links erreichbar")
+    lines.append(f"  Erreichbarkeit:         {hok}/{len(https)} Links erreichbar")
     if downloads:
         dok = sum(r.status == "OK" for r in downloads)
-        lines.append(f"  Downloads:      {dok}/{len(downloads)} in Ordnung")
+        lines.append(f"  Downloads:              {dok}/{len(downloads)} in Ordnung")
     if neue or verschwundene:
         lines.append(
-            f"  Veränderungen:  {len(neue)} neu, {len(verschwundene)} nicht mehr gefunden"
+            f"  Veränderungen:          {len(neue)} neu, {len(verschwundene)} nicht mehr gefunden"
         )
 
-    probleme = sorted(
-        (r for r in alle if r.status in ("DEFEKT", "MANUELL_PRÜFEN")), key=_sort_key
-    )
-    if probleme:
-        lines += ["", f"HANDLUNGSBEDARF ({len(probleme)})"]
-        for r in probleme:
-            lines.append(f"  [{_LABEL[r.status]}] {name_of(r)}")
+    if kaputt:
+        lines += ["", f">>> ECHT DEFEKT – BITTE PRÜFEN ({len(kaputt)})"]
+        for r in sorted(kaputt, key=_sort_key):
+            lines.append(f"  {name_of(r)}")
             lines.append(f"      {r.link.url}")
             detail = _kurz_detail(r)
             if detail:
                 lines.append(f"      {detail}")
+    else:
+        lines += ["", ">>> ECHT DEFEKT: keine. Nichts kaputt."]
 
-    if funnels:
-        lines += ["", "KLICKSTRECKEN (Klick-Test bis zum Abschluss-Button)"]
-        for r in sorted(funnels, key=_sort_key):
-            info = f"{r.steps_done} Schritte"
-            if r.stop_button:
-                info += f", Stop-Button: {r.stop_button}"
-            lines.append(f"  [{_LABEL[r.status]}] {name_of(r)} ({info})")
-            lines.append(f"      {r.link.url}")
+    if botschutz:
+        lines += [
+            "",
+            f"BOT-SCHUTZ (Link erreichbar, nur der Prüf-Automat wird geblockt) ({len(botschutz)})",
+        ]
+        for r in sorted({r.link.url: r for r in botschutz}.values(), key=name_of):
+            lines.append(f"  {name_of(r)}  |  {r.link.url}")
 
-    if https:
-        lines += ["", "ERREICHBARKEIT ALLER LINKS"]
-        for r in sorted(https, key=_sort_key):
-            lines.append(f"  [{_LABEL[r.status]}] {name_of(r)}  |  {r.link.url}")
+    if klick:
+        lines += [
+            "",
+            f"KLICKSTRECKE UNVOLLSTÄNDIG (Link geht, Automatik endet vor dem Button) ({len(klick)})",
+        ]
+        for r in sorted({r.link.url: r for r in klick}.values(), key=name_of):
+            lines.append(f"  {name_of(r)}  |  {r.link.url}")
+
+    gruen = [r for r in funnels if r.status == "OK"]
+    if gruen:
+        lines += ["", f"VOLLSTÄNDIG DURCHGEKLICKT BIS ABSCHLUSS-BUTTON ({len(gruen)})"]
+        for r in sorted(gruen, key=name_of):
+            btn = f" – Stop: {r.stop_button}" if r.stop_button else ""
+            lines.append(f"  {name_of(r)}{btn}")
 
     if downloads:
         prob_dl = [r for r in downloads if r.status != "OK"]

@@ -52,7 +52,9 @@ class SafetyTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(3, len(tracking))
         targets = select_funnel_targets(links, load_config())
         self.assertFalse({l.url for l in tracking} & {l.url for l in targets})
-        self.assertEqual(58, len(targets))
+        # Klick-Ziele = alle eindeutigen Links ohne die reinen Tracking-Links.
+        # Keine feste Zahl: der Monats-/Freitagscheck darf die Liste ändern.
+        self.assertEqual(len(links) - len(tracking), len(targets))
 
     def test_overview_path_rules_include_aok_special_case(self):
         self.assertTrue(is_tariff_page("https://x/anbieter/allianz/tarif/"))
