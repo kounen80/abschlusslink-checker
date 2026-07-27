@@ -8,7 +8,7 @@ from datetime import datetime
 from .browser_probe import escalate_blocked
 from .check_links import check_all_links
 from .common import PROJECT_DIR, load_config, load_linkliste
-from .report import build_report, send_via_apple_mail
+from .report import build_email_body, build_report, send_via_apple_mail
 
 
 async def main() -> int:
@@ -32,13 +32,18 @@ async def main() -> int:
     )
     manual = sum(r.status == "MANUELL_PRÜFEN" for r in results)
     subject = (
-        f"[Linkcheck] Tages-Erreichbarkeit – {defects} defekt, {manual} manuell prüfen"
+        f"[Linkcheck] Tages-Erreichbarkeit - {defects} defekt, {manual} manuell prüfen"
     )
     if config["report"].get("send_email", True) and "--ohne-mail" not in sys.argv:
+        body = build_email_body(
+            run_dir.name, [], results, [], [], [],
+            titel="Täglicher Erreichbarkeits-Check",
+        )
+        body += "\nReiner HTTP-/Redirect-Check. Keine Abschlussstrecke wurde bedient."
         ok = send_via_apple_mail(
             report_path,
             subject,
-            "Reiner HTTP-/Redirect-Check. Keine Abschlussstrecke wurde bedient.",
+            body,
             config["report"]["email_to"],
             config["report"].get("email_from", ""),
         )

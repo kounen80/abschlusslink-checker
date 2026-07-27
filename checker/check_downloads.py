@@ -30,9 +30,24 @@ async def check_download(client: httpx.AsyncClient, url: str, quelle: str, min_b
     try:
         resp = await client.get(url)
         if resp.status_code >= 400:
-            result.status = "DEFEKT"
-            result.details.append(f"HTTP {resp.status_code}")
-            return result
+            # Manche Server (z.B. SDK) beantworten unsere Prüf-Kennung mit
+            # 403/410, liefern die Datei einem normalen Browser aber aus.
+            # Einmal mit Standard-Browser-Kennung nachladen, bevor DEFEKT gilt.
+            browser_ua = (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17 Safari/605.1.15"
+            )
+            retry = await client.get(url, headers={"User-Agent": browser_ua})
+            if retry.status_code < 400:
+                result.details.append(
+                    f"HTTP {resp.status_code} für Prüf-Kennung, "
+                    f"aber {retry.status_code} im Browser (Datei vorhanden)"
+                )
+                resp = retry
+            else:
+                result.status = "DEFEKT"
+                result.details.append(f"HTTP {resp.status_code}")
+                return result
         content = resp.content
         ctype = resp.headers.get("content-type", "")
         result.details.append(f"HTTP {resp.status_code}, {len(content)} Bytes, {ctype}")

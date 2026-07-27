@@ -45,9 +45,21 @@ async def main() -> int:
         + html.escape("\n".join(crawl_log + wizard_log)) + "</pre>",
         encoding="utf-8",
     )
-    subject = f"[Linkcheck] Monats-Check – {len(changes)} Änderungen/Warnungen"
+    subject = f"[Linkcheck] Monats-Check - {len(changes)} Änderungen/Warnungen"
+    body_lines = [
+        f"Monatlicher Übersichts-Abgleich vom {run_dir.name}.",
+        "",
+        f"KURZÜBERSICHT",
+        f"  {len(pages)} Tarifseiten, {len(scanned)} Onlineabschlüsse, "
+        f"{len(data)} eindeutige Links, {scan_errors} Scanfehler.",
+        "",
+        f"ÄNDERUNGEN / WARNUNGEN ({len(changes)})",
+    ]
+    body_lines += [f"  - {c}" for c in changes] or ["  Keine Änderungen."]
+    body_lines += ["", "Details und Protokoll im Anhang (report.html)."]
+    body = "\n".join(body_lines)
     if config["report"].get("send_email", True) and "--ohne-mail" not in sys.argv:
-        if not send_via_apple_mail(report, subject, subject, config["report"]["email_to"], config["report"].get("email_from", "")):
+        if not send_via_apple_mail(report, subject, body, config["report"]["email_to"], config["report"].get("email_from", "")):
             print("Apple-Mail-Versand fehlgeschlagen")
             return 1
     print(subject)

@@ -160,13 +160,6 @@
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/universa/uni-denttop75/
   - name: uni-dent|Top 90
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/universa/uni-denttop90/
-- gesellschaft: Janitos
-  abschluss_url: https://onlinetarifrechner.janitos.she.de/kzv/?a=xsmqscgsyrcee
-  tarife:
-  - name: dental max
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/janitos/janitos-dental-max/
-  - name: dental plus
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/janitos/janitos-dental-plus/
 - gesellschaft: ADVIGON
   abschluss_url: https://secure2.advigon.com/ola-ui2/46/100/tr/basisdaten?adnr=4161618
   tarife:
@@ -453,12 +446,12 @@
   - name: Dental 90
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/getsafe/dental-90/
 - gesellschaft: Union Krankenversicherung
-  abschluss_url: https://www.ukv.de/KVEinfachWeb/servlet/NaturPRIVAT?Mandant=cmsukv&Style=CMS_neu&VERM_ID=180191331&ADE_ID=01638108
+  abschluss_url: https://tinyurl.com/4mh4p5tt
   tarife:
   - name: NaturPRIVAT
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ukv/ukvbbkk-naturprivat/
 - gesellschaft: Union Krankenversicherung
-  abschluss_url: https://www.ukv.de/KVEinfachWeb/servlet/VorsorgePRIVAT?Mandant=cmsukv&Style=CMS_neu&VERM_ID=180191331&ADE_ID=01638108
+  abschluss_url: https://tinyurl.com/3e5nrru5
   tarife:
   - name: VorsorgePRIVAT
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ukv/ukvbbkk-vorsorgeprivat/

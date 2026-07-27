@@ -17,7 +17,7 @@ from .check_funnel import check_all_funnels
 from .check_links import check_all_links
 from .common import PROJECT_DIR, load_config, load_linkliste
 from .discover import diff_with_last_run
-from .report import build_report, notify_macos, send_via_apple_mail
+from .report import build_email_body, build_report, notify_macos, send_via_apple_mail
 
 
 async def main() -> int:
@@ -73,11 +73,11 @@ async def main() -> int:
     say(subject)
 
     if config["report"].get("send_email", True) and "--ohne-mail" not in sys.argv:
-        body = (
-            f"Wöchentlicher Abschlusslink-Check vom {run_dir.name}.\n"
-            f"{subject.split('] ', 1)[1]}\n"
-            f"Details im angehängten Report. Screenshots liegen unter:\n{shots_dir}"
+        body = build_email_body(
+            run_dir.name, funnel_results, http_results, download_results,
+            neue, verschwundene, titel="Wöchentlicher Abschlusslink-Check",
         )
+        body += f"\nScreenshots liegen lokal unter: {shots_dir}"
         if send_via_apple_mail(
             report_path, subject, body,
             config["report"]["email_to"], config["report"].get("email_from", ""),

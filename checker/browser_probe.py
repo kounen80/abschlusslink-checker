@@ -57,11 +57,49 @@ async def probe_url(context, url: str, timeout_ms: int = 45000) -> tuple[bool, l
     """True, wenn die Seite im Browser plausibel lädt. Mit Detailprotokoll."""
     details: list[str] = []
     page = await context.new_page()
+    # Letzten Dokument-Status der Hauptseite mitschneiden. Tracking-Redirects
+    # (financeads) leiten per HTTP UND per JS/Meta weiter, z.B.
+    # financeads -> i.ergo.de -> ergo.de; der Startstatus (financeads 200)
+    # sagt nichts über die eigentliche Zielseite aus.
+    final_status = {"code": 0}
+
+    def _track(response):
+        try:
+            req = response.request
+            if req.resource_type == "document" and req.frame == page.main_frame:
+                final_status["code"] = response.status
+        except Exception:
+            pass
+
+    page.on("response", _track)
     try:
         resp = await page.goto(url, timeout=timeout_ms, wait_until="domcontentloaded")
-        await page.wait_for_timeout(3000)
+
+        # Redirect-Kette zu Ende laufen lassen: warten, bis sich URL UND
+        # Textmenge stabilisieren. Eine feste Wartezeit trifft sonst manchmal
+        # eine dünne Zwischen-Weiterleitungsseite und wertet sie als "leer".
+        last_url, stable = "", 0
+        for _ in range(10):
+            await page.wait_for_timeout(1200)
+            try:
+                await page.wait_for_load_state("networkidle", timeout=4000)
+            except Exception:
+                pass
+            current = page.url
+            try:
+                text_len = await page.evaluate("() => document.body.innerText.length")
+            except Exception:
+                text_len = 0
+            if current == last_url and text_len > 400:
+                stable += 1
+                if stable >= 2:
+                    break
+            else:
+                stable = 0
+            last_url = current
+
         await dismiss_consent(page)
-        await page.wait_for_timeout(1500)
+        await page.wait_for_timeout(1200)
 
         # Challenge-/Wartespiegel ("Nur einen Moment…", "Just a moment…")
         # laufen per JS weiter zur echten Seite: kurz nachwarten und neu lesen.
@@ -72,7 +110,7 @@ async def probe_url(context, url: str, timeout_ms: int = 45000) -> tuple[bool, l
             else:
                 break
 
-        status = resp.status if resp else 0
+        status = final_status["code"] or (resp.status if resp else 0)
         title = (await page.title() or "").strip()
         try:
             text = await page.evaluate("() => document.body.innerText")
@@ -128,14 +166,26 @@ async def escalate_blocked(results: list[CheckResult], config: dict) -> int:
         # durch. Bewusst KEIN eigener User-Agent und keine Maskierung, damit
         # die Prüfung exakt dem entspricht, was ein echter Kunde erlebt.
         browser = await launch_real_chrome(pw)
-        context = await browser.new_context(
-            viewport={"width": 1280, "height": 900}, locale="de-DE"
-        )
-        await context.add_init_script(
-            "try { localStorage.setItem('plausible_ignore', 'true'); } catch (e) {}"
-        )
         for result in candidates:
-            ok, details = await probe_url(context, result.link.url)
+            # Frischer Context pro Kandidat: Consent-/Cookie-Zustand einer
+            # Versicherer-Seite darf die nächste Prüfung nicht verfälschen.
+            # Bei Fehlschlag einmal wiederholen (Redirect-/Ladeflakiness).
+            ok, details = False, []
+            for attempt in (1, 2):
+                context = await browser.new_context(
+                    viewport={"width": 1280, "height": 900}, locale="de-DE"
+                )
+                await context.add_init_script(
+                    "try { localStorage.setItem('plausible_ignore', 'true'); } catch (e) {}"
+                )
+                try:
+                    ok, details = await probe_url(context, result.link.url)
+                finally:
+                    await context.close()
+                if ok:
+                    break
+                if attempt == 1:
+                    details.append("erster Versuch erfolglos, wiederhole einmal")
             result.details.append("Automatische Browser-Nachprüfung: " + " | ".join(details))
             if ok:
                 result.status = "OK"

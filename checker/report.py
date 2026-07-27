@@ -162,12 +162,141 @@ def build_report(
     report_path.write_text(html, encoding="utf-8")
 
     if fehler == 0 and pruefbedarf == 0:
-        subject = f"[Linkcheck] OK – {sum(1 for r in funnels if r.status == 'OK')}/{len(funnels)} Strecken in Ordnung"
+        subject = f"[Linkcheck] OK - {sum(1 for r in funnels if r.status == 'OK')}/{len(funnels)} Strecken in Ordnung"
     elif fehler == 0:
-        subject = f"[Linkcheck] PRÜFBEDARF – {pruefbedarf} Ergebnis(se) manuell prüfen"
+        subject = f"[Linkcheck] PRÜFBEDARF - {pruefbedarf} Ergebnis(se) manuell prüfen"
     else:
-        subject = f"[Linkcheck] FEHLER – {fehler} Problem(e) gefunden"
+        subject = f"[Linkcheck] FEHLER - {fehler} Problem(e) gefunden"
     return report_path, subject, fehler
+
+
+# Klartext-Kurzlabels für die E-Mail (der HTML-Report hat eigene Farb-Klassen).
+_LABEL = {
+    "OK": "OK",
+    "WEITERLEITUNG_OK": "OK/WEITERLEITUNG",
+    "MANUELL_PRÜFEN": "PRÜFEN",
+    "DEFEKT": "DEFEKT",
+}
+
+
+def _sort_key(r: CheckResult):
+    # Defekt zuerst, dann Prüfbedarf, dann der Rest – wie im HTML-Report.
+    return (r.status != "DEFEKT", r.status != "MANUELL_PRÜFEN")
+
+
+def _kurz_detail(r: CheckResult, limit: int = 160) -> str:
+    text = " ".join(" | ".join(r.details).split())
+    return text[:limit] + ("…" if len(text) > limit else "")
+
+
+def build_email_body(
+    datum: str,
+    funnels: list[CheckResult],
+    https: list[CheckResult],
+    downloads: list[CheckResult],
+    neue: list[str],
+    verschwundene: list[str],
+    titel: str = "Wöchentlicher Abschlusslink-Check",
+) -> str:
+    """Ergebnis als Klartext-Zusammenfassung für den E-Mail-Body.
+
+    Aufbau: Kurzübersicht oben, dann Handlungsbedarf (Defekt/Prüfbedarf zuerst),
+    danach jede einzelne Strecke bzw. jeder Link mit Status. So genügt ein Blick
+    in die Mail, der HTML-Anhang bleibt nur für Details/Screenshots nötig.
+    """
+    alle = funnels + https + downloads
+    fehler = sum(r.status == "DEFEKT" for r in alle)
+    pruefbedarf = sum(r.status == "MANUELL_PRÜFEN" for r in alle)
+    ok = sum(r.status in ("OK", "WEITERLEITUNG_OK") for r in alle)
+
+    def name_of(r: CheckResult) -> str:
+        ges = r.link.gesellschaft or "-"
+        bez = r.link.tarif or r.link.kategorie or "-"
+        return f"{ges} / {bez}"
+
+    lines: list[str] = [f"{titel} vom {datum}", ""]
+
+    if fehler:
+        lines.append(f"ERGEBNIS: {fehler} DEFEKT, {pruefbedarf} manuell prüfen, {ok} in Ordnung.")
+    elif pruefbedarf:
+        lines.append(
+            f"ERGEBNIS: keine Defekte, aber {pruefbedarf} Ergebnis(se) manuell prüfen "
+            f"({ok} in Ordnung)."
+        )
+    else:
+        lines.append(f"ERGEBNIS: alles in Ordnung ({ok} Prüfungen ohne Beanstandung).")
+
+    lines += ["", "KURZÜBERSICHT"]
+    if funnels:
+        fok = sum(r.status == "OK" for r in funnels)
+        lines.append(f"  Klickstrecken:  {fok}/{len(funnels)} bis zum Abschluss-Button")
+    hok = sum(r.status in ("OK", "WEITERLEITUNG_OK") for r in https)
+    lines.append(f"  Erreichbarkeit: {hok}/{len(https)} Links erreichbar")
+    if downloads:
+        dok = sum(r.status == "OK" for r in downloads)
+        lines.append(f"  Downloads:      {dok}/{len(downloads)} in Ordnung")
+    if neue or verschwundene:
+        lines.append(
+            f"  Veränderungen:  {len(neue)} neu, {len(verschwundene)} nicht mehr gefunden"
+        )
+
+    probleme = sorted(
+        (r for r in alle if r.status in ("DEFEKT", "MANUELL_PRÜFEN")), key=_sort_key
+    )
+    if probleme:
+        lines += ["", f"HANDLUNGSBEDARF ({len(probleme)})"]
+        for r in probleme:
+            lines.append(f"  [{_LABEL[r.status]}] {name_of(r)}")
+            lines.append(f"      {r.link.url}")
+            detail = _kurz_detail(r)
+            if detail:
+                lines.append(f"      {detail}")
+
+    if funnels:
+        lines += ["", "KLICKSTRECKEN (Klick-Test bis zum Abschluss-Button)"]
+        for r in sorted(funnels, key=_sort_key):
+            info = f"{r.steps_done} Schritte"
+            if r.stop_button:
+                info += f", Stop-Button: {r.stop_button}"
+            lines.append(f"  [{_LABEL[r.status]}] {name_of(r)} ({info})")
+            lines.append(f"      {r.link.url}")
+
+    if https:
+        lines += ["", "ERREICHBARKEIT ALLER LINKS"]
+        for r in sorted(https, key=_sort_key):
+            lines.append(f"  [{_LABEL[r.status]}] {name_of(r)}  |  {r.link.url}")
+
+    if downloads:
+        prob_dl = [r for r in downloads if r.status != "OK"]
+        lines.append("")
+        if prob_dl:
+            lines.append(f"DOWNLOADS MIT BEANSTANDUNG ({len(prob_dl)} von {len(downloads)})")
+            for r in prob_dl:
+                lines.append(f"  [{_LABEL[r.status]}] {r.link.url}")
+                detail = _kurz_detail(r)
+                if detail:
+                    lines.append(f"      {detail}")
+        else:
+            lines.append(f"DOWNLOADS: alle {len(downloads)} in Ordnung.")
+
+    lines += [
+        "",
+        "Vollständiger HTML-Report inkl. Protokollen und Screenshots im Anhang (report.html).",
+    ]
+    return "\n".join(lines)
+
+
+def _as_applescript_string(text: str) -> str:
+    """Python-String als sicheres AppleScript-Stringliteral verpacken.
+
+    Escaped Backslash und Anführungszeichen und wandelt Zeilenumbrüche in
+    `" & return & "`. Damit können Umlaute, Anführungszeichen oder URLs im
+    mehrzeiligen Body die AppleScript-Übergabe nicht mehr zerbrechen.
+    """
+    text = text.replace("\\", "\\\\").replace('"', '\\"')
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    text = text.replace("\n", '" & return & "')
+    return '"' + text + '"'
 
 
 def send_via_apple_mail(
@@ -182,9 +311,11 @@ def send_via_apple_mail(
         f'make new to recipient at end of to recipients with properties {{address:"{addr.strip()}"}}'
         for addr in recipient.split(",") if addr.strip()
     )
+    subject_as = _as_applescript_string(subject)
+    content_as = _as_applescript_string(body + "\n\n")
     script = f'''
     tell application "Mail"
-        set neueNachricht to make new outgoing message with properties {{subject:"{subject}", content:"{body}\n\n", visible:false}}
+        set neueNachricht to make new outgoing message with properties {{subject:{subject_as}, content:{content_as}, visible:false}}
         {sender_line}
         tell neueNachricht
             {recipient_lines}
