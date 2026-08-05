@@ -145,7 +145,7 @@ async def probe_url(context, url: str, timeout_ms: int = 45000) -> tuple[bool, l
 
 
 async def escalate_blocked(results: list[CheckResult], config: dict) -> int:
-    """Alle 403/429-MANUELL_PRÜFEN-Ergebnisse per Browser nachprüfen.
+    """Bot-Schutz und wiederholte Netzwerkfehler per Browser nachprüfen.
 
     Erfolgreich nachgeprüfte Links werden auf OK gestuft (mit Nachweis im
     Protokoll). Gibt die Anzahl der hochgestuften Links zurück.
@@ -155,7 +155,11 @@ async def escalate_blocked(results: list[CheckResult], config: dict) -> int:
     candidates = [
         r for r in results
         if r.status == "MANUELL_PRÜFEN"
-        and any("Sperre/Bot-Schutz" in d for d in r.details)
+        and any(
+            "Sperre/Bot-Schutz" in d
+            or "Browser-Nachprüfung erforderlich" in d
+            for d in r.details
+        )
     ]
     if not candidates:
         return 0
@@ -190,5 +194,12 @@ async def escalate_blocked(results: list[CheckResult], config: dict) -> int:
             if ok:
                 result.status = "OK"
                 upgraded += 1
+            elif any("Browser-Nachprüfung erforderlich" in d for d in result.details):
+                # Erst drei HTTP-Fehler plus zwei erfolglose Browser-Versuche
+                # liefern genügend Evidenz für einen echten Erreichbarkeitsdefekt.
+                result.status = "DEFEKT"
+                result.details.append(
+                    "Auch die passive Browser-Nachprüfung ist fehlgeschlagen"
+                )
         await browser.close()
     return upgraded

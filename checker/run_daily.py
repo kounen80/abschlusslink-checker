@@ -22,8 +22,9 @@ async def main() -> int:
     run_dir = PROJECT_DIR / config["report"]["dir"] / "daily" / datetime.now().strftime("%Y-%m-%d")
     run_dir.mkdir(parents=True, exist_ok=True)
     results = await check_all_links(links, config)
-    # Bot-Schutz-Treffer (403/429) automatisch mit echtem Browser nachprüfen:
-    # lädt die Seite nur passiv, keine Formularinteraktion.
+    # Bot-Schutz-Treffer (403/429) und dreimal fehlgeschlagene HTTP-Abrufe
+    # automatisch mit echtem Browser nachprüfen. Die Seite wird nur passiv
+    # geladen; es findet keine Formularinteraktion statt.
     upgraded = await escalate_blocked(results, config)
     if upgraded:
         print(f"{upgraded} Link(s) per Browser-Nachprüfung als OK bestätigt", flush=True)

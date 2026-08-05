@@ -24,9 +24,41 @@ def _vermittler_params(url: str) -> dict[str, str]:
 
 async def check_link(client: httpx.AsyncClient, link: LinkInfo) -> CheckResult:
     result = CheckResult(link=link, check="http")
+    resp = None
+    start = 0.0
+    # Timeouts und Verbindungsabbrüche sind in parallelen Tagesläufen häufig
+    # flüchtig. Erst nach drei Versuchen übernimmt die Browser-Nachprüfung.
+    for attempt in range(1, 4):
+        try:
+            start = time.monotonic()
+            resp = await client.get(link.url)
+            if attempt > 1:
+                result.details.append(f"HTTP-Abruf im Versuch {attempt} erfolgreich")
+            break
+        except httpx.TransportError as exc:
+            message = str(exc).strip() or type(exc).__name__
+            result.details.append(
+                f"Vorübergehender Netzwerkfehler, Versuch {attempt}/3: "
+                f"{type(exc).__name__}: {message}"
+            )
+            if attempt < 3:
+                # URL-abhängiger Versatz verhindert synchrone Wiederholungen
+                # mehrerer Links desselben Anbieters.
+                await asyncio.sleep(attempt + (sum(link.url.encode()) % 7) / 10)
+        except Exception as exc:
+            result.status = "DEFEKT"
+            message = str(exc).strip() or type(exc).__name__
+            result.details.append(f"Nicht erreichbar: {type(exc).__name__}: {message}")
+            return result
+
+    if resp is None:
+        result.status = "MANUELL_PRÜFEN"
+        result.details.append(
+            "Drei HTTP-Versuche fehlgeschlagen; passive Browser-Nachprüfung erforderlich"
+        )
+        return result
+
     try:
-        start = time.monotonic()
-        resp = await client.get(link.url)
         elapsed = time.monotonic() - start
         chain = [str(r.url) for r in resp.history] + [str(resp.url)]
 

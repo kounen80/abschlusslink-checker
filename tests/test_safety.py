@@ -3,6 +3,8 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
+import httpx
+
 from checker.check_funnel import CAPTCHA_PATTERN, select_funnel_targets
 from checker.check_links import check_link
 from checker.check_uebersicht import is_tariff_page, reconcile
@@ -13,6 +15,26 @@ from tools.import_uebergabe import DEFAULT_SOURCE, parse_markdown
 class _FailingClient:
     async def get(self, url):
         raise OSError("simulierter DNS-Fehler")
+
+
+class _FlakyClient:
+    def __init__(self):
+        self.calls = 0
+
+    async def get(self, url):
+        self.calls += 1
+        if self.calls < 3:
+            raise httpx.ReadTimeout("kurzer Aussetzer")
+        return httpx.Response(200, request=httpx.Request("GET", url), text="Antrag")
+
+
+class _AlwaysTimingOutClient:
+    def __init__(self):
+        self.calls = 0
+
+    async def get(self, url):
+        self.calls += 1
+        raise httpx.ReadTimeout("weiterhin langsam")
 
 
 class SafetyTests(unittest.IsolatedAsyncioTestCase):
@@ -45,6 +67,20 @@ class SafetyTests(unittest.IsolatedAsyncioTestCase):
     async def test_network_error_is_never_success(self):
         result = await check_link(_FailingClient(), LinkInfo("https://example.invalid"))
         self.assertEqual("DEFEKT", result.status)
+
+    async def test_transient_timeout_is_retried_and_recovers(self):
+        client = _FlakyClient()
+        result = await check_link(client, LinkInfo("https://example.test/antrag"))
+        self.assertEqual(3, client.calls)
+        self.assertEqual("OK", result.status, result.details)
+        self.assertTrue(any("Versuch 3 erfolgreich" in d for d in result.details))
+
+    async def test_three_timeouts_require_browser_check_before_defect(self):
+        client = _AlwaysTimingOutClient()
+        result = await check_link(client, LinkInfo("https://example.test/antrag"))
+        self.assertEqual(3, client.calls)
+        self.assertEqual("MANUELL_PRÜFEN", result.status, result.details)
+        self.assertTrue(any("Browser-Nachprüfung erforderlich" in d for d in result.details))
 
     def test_tracking_links_are_http_only(self):
         links = load_linkliste()
