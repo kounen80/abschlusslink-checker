@@ -6,12 +6,6 @@
 - gesellschaft: ottonova
   abschluss_url: https://b2b.ottonova.de/b2b/dental-signup?brokerId=0050%2F00001
   tarife:
-  - name: Zahn 100 First Class (geschlossen)
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ottonova/ottonova-zahn100-first-class/
-  - name: Zahn 70 Economy Class
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ottonova/ottonova-zahn70-economy-class/
-  - name: Zahn 85 Business Class
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ottonova/ottonova-zahn85-business-class/
   - name: Zahn 100 First Class
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ottonova/zahn100-first-class/
   - name: Zahn 100 plus
@@ -32,15 +26,6 @@
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ottonova/zahn90-business/
   - name: Zahn 90 plus
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ottonova/zahn90-plus/
-- gesellschaft: Berlin Direkt
-  abschluss_url: https://buchung.berlin-direktversicherung.de/bdv/zahnzusatz?TerminalId=4161618
-  tarife:
-  - name: DZ
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/berlin-direkt/dz/
-  - name: DZL
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/berlin-direkt/dzl/
-  - name: DZM
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/berlin-direkt/dzm/
 - gesellschaft: Concordia
   abschluss_url: https://cosima.concordia.de/tarifrechner/Krankenzusatz-Tarifrechner/start?vermittler-id=07702000
   tarife:
@@ -52,44 +37,6 @@
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/concordia/zahn-sorglos-familie/
   - name: ZAHN SORGLOS
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/concordia/zahn-sorglos/
-- gesellschaft: ERGO
-  abschluss_url: https://i.ergo.de/?wmid=190930613
-  tarife:
-  - name: ZZP
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/ergo-direkt-versicherungen-zzp/
-- gesellschaft: ERGO
-  abschluss_url: https://i.ergo.de/?wmid=398333143
-  tarife:
-  - name: Dental-Vorsorge-Premium
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/dental-vorsorge-premium/
-  - name: Dental-Vorsorge
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/dental-vorsorge/
-- gesellschaft: ERGO
-  abschluss_url: https://i.ergo.de/?wmid=528355711734779904
-  tarife:
-  - name: KFO-Sofort-Schutz
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/ergo-kfo-sofort/
-- gesellschaft: ERGO
-  abschluss_url: https://i.ergo.de/?wmid=790012563046797312
-  tarife:
-  - name: Dental-Schutz 100 + Vorsorge-Premium
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/dental-schutz-100-dental-vorsorge-premium/
-  - name: Dental-Schutz 100 + Dental-Vorsorge
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/dental-schutz-100-dental-vorsorge/
-  - name: Dental-Schutz 100
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/dental-schutz-100/
-  - name: Dental-Schutz 75 + Vorsorge-Premium
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/dental-schutz-75-dental-vorsorge-premium/
-  - name: Dental-Schutz 75 + Dental-Vorsorge
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/dental-schutz-75-dental-vorsorge/
-  - name: Dental-Schutz 75
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/dental-schutz-75/
-  - name: Dental-Schutz 90 + Vorsorge-Premium
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/dental-schutz-90-dental-vorsorge-premium/
-  - name: Dental-Schutz 90 + Dental-Vorsorge
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/dental-schutz-90-dental-vorsorge/
-  - name: Dental-Schutz 90
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/dental-schutz-90/
 - gesellschaft: SDK
   abschluss_url: https://insurances-online.levelnine.biz/?mandant=sdk&tarifftypes=Zahn&agentId1=903212&agentId2=&insurers=36&tariffs=&customValues=e30=&contactInformation=eyJmaXJzdE5hbWUiOiJPbmxpbmUiLCJsYXN0TmFtZSI6IlZlcnNpY2hlcnVuZ3NWZXJnbGVpY2ggR21iSCIsImNvbXBhbnkiOiIiLCJzdHJlZXQiOiJSb3NlbmhlaW1lciBMYW5kc3RyLiAzNSIsInppcGNvZGUiOiI4NTUyMSIsImNpdHkiOiJPdHRvYnJ1bm4iLCJwaG9uZSI6IjA4OSA0MDI4NzI3MiIsIm1vYmlsZSI6IiIsImVtYWlsIjoiaW5mb0B0ZXN0LXphaG56dXNhdHp2ZXJzaWNoZXJ1bmcuZGUifQ==&remarks=IkJlaSBGcmFnZW4gc2luZCB3aXIgZ2VybmUgZvxyIFNpZSBkYS4i&defaultContact=false&employeeInsurance=NOT_BKV
   tarife:
@@ -107,13 +54,6 @@
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/sdk/sdk-zahn-70/
   - name: Zahn 90 | ZP9
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/sdk/sdk-zahn-90/
-- gesellschaft: Gothaer
-  abschluss_url: https://koop.gothaer.de/makleronlineversicherungsvergleich/privatkunden/krankenzusatzversicherung/zahnzusatzversicherung/medizduo-rechner.htm
-  tarife:
-  - name: MediZ Smile 75
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/gothaer/gothaer-mediz-smile-75/
-  - name: MediZ Smile 85
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/gothaer/gothaer-mediz-smile-85/
 - gesellschaft: Deutsche Familienversicherung
   abschluss_url: https://makler.deutsche-familienversicherung.de/partner/iframe/zahnschutz/antrag-basis?cm_mmc=onlineVersicherungsVergleichGmbh
   tarife:
@@ -192,8 +132,6 @@
   tarife:
   - name: Mehr Zahn 100 + Mehr Zahnvorsorge Bonus
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/barmenia/barmenia-mehr-zahn-100-zahnvorsorge-bonus/
-  - name: Mehr Zahn 100
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/barmenia/barmenia-mehr-zahn-100/
   - name: Mehr Zahn 80 + Mehr Zahnvorsorge Bonus
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/barmenia/barmenia-mehr-zahn-80-zahnvorsorge-bonus/
   - name: Mehr Zahn 80
@@ -206,19 +144,40 @@
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/barmenia/barmenia-mehr-zahnvorsorge-d/
   - name: MehrZahnvorsorge
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/barmenia/barmenia-mehr-zahnvorsorge/
-  - name: BarmeniaGothaer Zahnzusatzversicherung
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/barmenia/barmeniagothaer/
   - name: Mehr Zahn 100 + Mehr Zahnvorsorge Bonus D
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/barmenia/mehr-zahn-100-zahnvorsorge-bonus-d/
   - name: Mehr Zahn 80 + Mehr Zahnvorsorge Bonus D
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/barmenia/mehr-zahn-80-zahnvorsorge-bonus-d/
   - name: Mehr Zahn 90 + Mehr Zahnvorsorge Bonus D
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/barmenia/mehr-zahn-90-zahnvorsorge-bonus-d/
+- gesellschaft: Barmeniagothaer
+  abschluss_url: https://ssl.barmenia.de/online-versichern/#/zahnversicherung/Beitrag?app=makler&adm=00104231
+  tarife:
+  - name: Mehr Zahnvorsorge D
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/barmeniagothaer/mehr-zahnvorsorge-d/
+  - name: Mehr Zahn Kompakt 100
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/barmeniagothaer/mzk100/
+  - name: Mehr Zahn Kompakt 70
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/barmeniagothaer/mzk70/
+  - name: Mehr Zahn Kompakt 80
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/barmeniagothaer/mzk80/
+  - name: Mehr Zahn Kompakt 90
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/barmeniagothaer/mzk90/
 - gesellschaft: Union Krankenversicherung
   abschluss_url: https://tinyurl.com/2f4ssf5c
   tarife:
   - name: ZahnPrivat 100
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ukv/zahnprivat-100/
+- gesellschaft: Union Krankenversicherung
+  abschluss_url: https://tinyurl.com/3e5nrru5
+  tarife:
+  - name: VorsorgePRIVAT
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ukv/ukvbbkk-vorsorgeprivat/
+- gesellschaft: Union Krankenversicherung
+  abschluss_url: https://tinyurl.com/4mh4p5tt
+  tarife:
+  - name: NaturPRIVAT
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ukv/ukvbbkk-naturprivat/
 - gesellschaft: Union Krankenversicherung
   abschluss_url: https://tinyurl.com/5v283h6w
   tarife:
@@ -306,21 +265,6 @@
   tarife:
   - name: KombiMed Zahn Z90 + PLS
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/dkv/kombimed-zahn-z90-pls/
-- gesellschaft: DA Direkt / dentolo
-  abschluss_url: https://www.da-direkt.de/partner/zz-rechner?flow=schema_da_direkt_026072981
-  tarife:
-  - name: 'DA Direkt: Zahnschutz Komfort'
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/da-direkt/da-direkt-komfort/
-  - name: 'DA Direkt: Zahnschutz Premium Plus'
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/da-direkt/da-direkt-premium-plus/
-  - name: 'DA Direkt: Zahnschutz Premium'
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/da-direkt/da-direkt-premium/
-  - name: 'dentolo: Dentolo Zahnschutz Komfort'
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/dentolo/zahnschutz-komfort/
-  - name: 'dentolo: Dentolo Zahnschutz Premium Plus'
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/dentolo/zahnschutz-premium-plus/
-  - name: 'dentolo: Dentolo Zahnschutz Premium'
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/dentolo/zahnschutz-premium/
 - gesellschaft: Die Bayerische
   abschluss_url: https://www.diebayerische.de/diebayerische/online-berechnen/zahnzusatzversicherung-berechnen?m=162615
   tarife:
@@ -353,20 +297,6 @@
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/maxcare/maxcare-dfv-zahnschutz-basis-30/
   - name: DFV ZahnSchutz früher MAXCARE Komfort
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/maxcare/maxcare-dfv-zahnschutz-komfort-60/
-  typ: tracking
-- gesellschaft: ERGO
-  abschluss_url: https://www.financeads.net/tc.php?t=53926C36041741T
-  tarife:
-  - name: ZEF
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/ergo-direkt-versicherungen-zef/
-  typ: tracking
-- gesellschaft: DA Direkt / dentolo
-  abschluss_url: https://www.financeads.net/tc.php?t=53926C37097538T
-  tarife:
-  - name: 'DA Direkt: Zahnschutz Akut Soforthilfe + Zahnschutz Komfort'
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/da-direkt/zahnschutz-komfort-akut-soforthilfe/
-  - name: 'dentolo: Dentolo Akut Soforthilfe Komfort'
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/dentolo/zahnschutz-akut-soforthilfe/
   typ: tracking
 - gesellschaft: INTER
   abschluss_url: https://www.inter.de/gesundheit/zahnzusatzversicherung/onlineabschluss/?vermnr=687640&vermemail=info@test-zahnzusatzversicherung.de
@@ -405,6 +335,11 @@
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/nuernberger/nuernberger-z80-komfort-80/
   - name: Komfort 90 / Z90
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/nuernberger/nuernberger-z90-komfort-90/
+- gesellschaft: ERGO
+  abschluss_url: https://www.test-zahnzusatzversicherung.de/online-abschluss-e/
+  tarife:
+  - name: Dental-Vorsorge-Premium
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ergo/dental-vorsorge-premium/
 - gesellschaft: LKH Landeskrankenhilfe
   abschluss_url: https://www.test-zahnzusatzversicherung.de/online-antrag/lkh70/
   tarife:
@@ -430,6 +365,21 @@
   tarife:
   - name: vigo 4YOU Zahnvorsorge Premium
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/vigo-krankenversicherung/vigo-4you-zahnvorsorge-premium/
+- gesellschaft: DA Direkt / dentolo
+  abschluss_url: https://www.test-zahnzusatzversicherung.de/vergleich/da-direkt-komfort/online-antrag-dadirekt
+  tarife:
+  - name: 'DA Direkt: Zahnschutz Komfort'
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/da-direkt/da-direkt-komfort/
+- gesellschaft: DA Direkt / dentolo
+  abschluss_url: https://www.test-zahnzusatzversicherung.de/vergleich/da-direkt-premium-plus/online-antrag-dadirekt
+  tarife:
+  - name: 'DA Direkt: Zahnschutz Premium Plus'
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/da-direkt/da-direkt-premium-plus/
+- gesellschaft: DA Direkt / dentolo
+  abschluss_url: https://www.test-zahnzusatzversicherung.de/vergleich/da-direkt-premium/online-antrag-dadirekt
+  tarife:
+  - name: 'DA Direkt: Zahnschutz Premium'
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/da-direkt/da-direkt-premium/
 - gesellschaft: Getsafe
   abschluss_url: https://www.test-zahnzusatzversicherung.de/vergleich/dental-100/online-antrag-getsafe/
   tarife:
@@ -445,16 +395,31 @@
   tarife:
   - name: Dental 90
     tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/getsafe/dental-90/
-- gesellschaft: Union Krankenversicherung
-  abschluss_url: https://tinyurl.com/4mh4p5tt
+- gesellschaft: DA Direkt / dentolo
+  abschluss_url: https://www.test-zahnzusatzversicherung.de/vergleich/zahnschutz-akut-soforthilfe/online-antrag-dadirekt
   tarife:
-  - name: NaturPRIVAT
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ukv/ukvbbkk-naturprivat/
-- gesellschaft: Union Krankenversicherung
-  abschluss_url: https://tinyurl.com/3e5nrru5
+  - name: 'dentolo: Dentolo Akut Soforthilfe Komfort'
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/dentolo/zahnschutz-akut-soforthilfe/
+- gesellschaft: DA Direkt / dentolo
+  abschluss_url: https://www.test-zahnzusatzversicherung.de/vergleich/zahnschutz-komfort-akut-soforthilfe/online-antrag-dadirekt
   tarife:
-  - name: VorsorgePRIVAT
-    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/ukv/ukvbbkk-vorsorgeprivat/
+  - name: 'DA Direkt: Zahnschutz Akut Soforthilfe + Zahnschutz Komfort'
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/da-direkt/zahnschutz-komfort-akut-soforthilfe/
+- gesellschaft: DA Direkt / dentolo
+  abschluss_url: https://www.test-zahnzusatzversicherung.de/vergleich/zahnschutz-komfort/online-antrag-dadirekt
+  tarife:
+  - name: 'dentolo: Dentolo Zahnschutz Komfort'
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/dentolo/zahnschutz-komfort/
+- gesellschaft: DA Direkt / dentolo
+  abschluss_url: https://www.test-zahnzusatzversicherung.de/vergleich/zahnschutz-premium-plus/online-antrag-dadirekt
+  tarife:
+  - name: 'dentolo: Dentolo Zahnschutz Premium Plus'
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/dentolo/zahnschutz-premium-plus/
+- gesellschaft: DA Direkt / dentolo
+  abschluss_url: https://www.test-zahnzusatzversicherung.de/vergleich/zahnschutz-premium/online-antrag-dadirekt
+  tarife:
+  - name: 'dentolo: Dentolo Zahnschutz Premium'
+    tarifseite: https://www.test-zahnzusatzversicherung.de/anbieter/dentolo/zahnschutz-premium/
 - gesellschaft: Hallesche
   abschluss_url: https://www.vermittlerportal.de/appserver/b2c/ZahnZusatz/?PID=ZZ_V%2COM_LG%2COM_NOBP%2CZZ_HIDEV&VMNR=559952&VMMAIL=info%40test-zahnzusatzversicherung.de
   tarife:
